@@ -172,10 +172,9 @@ class _AutoScrollPageViewState extends State<AutoScrollPageView>
             }
             _pageController.jumpToPage(_currentIndex);
         }
-        //print("当前页数--------------------->${_currentIndex - offsetLen}");
+        //print("当前页数--------------------->${_currentIndex - _bufferPageLen}");
         if (widget.pageChanged != null)
         {
-            widget.pageChanged(_currentIndex);
         }
     }
 
