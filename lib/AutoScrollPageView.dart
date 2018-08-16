@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 //页面下标改变
-typedef void PageChanged(int index);
+typedef void OnPageChanged(int index);
 
 ///自动滚动的PageView
 class AutoScrollPageView extends StatefulWidget
@@ -23,16 +23,16 @@ class AutoScrollPageView extends StatefulWidget
     //动画模式
     final Curve curve;
 
-    final PageChanged pageChanged;
+    final OnPageChanged onPageChanged;
 
     AutoScrollPageView(this.widgetList,
             {
                 Key key,
                 this.initIndex = 0,
-                this.intervalDuration = const Duration(seconds: 2),
+                this.intervalDuration = const Duration(milliseconds: 5000),
                 this.animationDuration = const Duration(milliseconds: 1000),
                 this.curve = Curves.easeInOut,
-                this.pageChanged,
+                this.onPageChanged,
             });
 
     @override
@@ -51,11 +51,14 @@ class _AutoScrollPageViewState extends State<AutoScrollPageView>
 
     int _currentIndex = 0;
 
+    //上次下标
+    int _lastIndex = 0;
+
     //计时器
     Timer _timer;
 
     //是否手指滚动
-    bool _isScroll = false;
+    bool _isFingerScroll = false;
 
     //是否手指触摸
     bool _isTouch = false;
@@ -73,7 +76,7 @@ class _AutoScrollPageViewState extends State<AutoScrollPageView>
         for (int i = 0; i < _bufferPageLen; i++)
         {
             int lastIndex = widget.widgetList.length - 1 - i;
-            print("Index----->$lastIndex");
+            //print("Index----->$lastIndex");
             if (widget.widgetList.length < _bufferPageLen)
             {
                 lastIndex = lastIndex.abs() % widget.widgetList.length;
@@ -89,7 +92,7 @@ class _AutoScrollPageViewState extends State<AutoScrollPageView>
 
         Function timerCallback = (Timer timer)
         {
-            if (!mounted || _isTouch || _isScroll)
+            if (!mounted || _isTouch || _isFingerScroll)
             {
                 return;
             }
@@ -105,10 +108,10 @@ class _AutoScrollPageViewState extends State<AutoScrollPageView>
     }
 
     ///获取时间戳
-    int _getTimestamp()
-    {
-        return new DateTime.now().millisecondsSinceEpoch;
-    }
+//    int _getTimestamp()
+//    {
+//        return new DateTime.now().millisecondsSinceEpoch;
+//    }
 
     @override
     Widget build(BuildContext context)
@@ -136,17 +139,17 @@ class _AutoScrollPageViewState extends State<AutoScrollPageView>
                 onTapDown: (details)
                 {
                     _isTouch = true;
-                    print("onTapDown----------------------------->$_isTouch");
+                    //print("onTapDown----------------------------->$_isTouch");
                 },
                 onTapUp: (details)
                 {
                     _isTouch = false;
-                    print("onTapUp----------------------------->$_isTouch");
+                    //print("onTapUp----------------------------->$_isTouch");
                 },
                 onTapCancel: ()
                 {
                     _isTouch = false;
-                    print("onTapCancel----------------------------->$_isTouch");
+                    //print("onTapCancel----------------------------->$_isTouch");
                 },),
             onNotification: (notification)
             {
@@ -172,10 +175,17 @@ class _AutoScrollPageViewState extends State<AutoScrollPageView>
             }
             _pageController.jumpToPage(_currentIndex);
         }
-        //print("当前页数--------------------->${_currentIndex - _bufferPageLen}");
-        if (widget.pageChanged != null)
+        int tempIndex = _currentIndex - _bufferPageLen;
+        //print("当前页数---------------------------->${_currentIndex - _bufferPageLen}");
+        if(tempIndex != _lastIndex)
         {
+            _lastIndex = tempIndex;
+            if (widget.onPageChanged != null)
+            {
+                widget.onPageChanged(tempIndex);
+            }
         }
+
     }
 
     //处理滚动监听
@@ -187,22 +197,22 @@ class _AutoScrollPageViewState extends State<AutoScrollPageView>
             UserScrollNotification userScrollNotification = notification;
             if(userScrollNotification.direction == ScrollDirection.idle)
             {
-                print("${_getTimestamp()}--------------------------------->用户手动滑动结束");
-                _isScroll = false;
+                //print("${_getTimestamp()}--------------------------------->用户手动滑动结束");
+                _isFingerScroll = false;
             }
             else
             {
-                print("${_getTimestamp()}--------------------------------->用户手动滑动开始");
-                _isScroll = true;
+                //print("${_getTimestamp()}--------------------------------->用户手动滑动开始");
+                _isFingerScroll = true;
             }
         }
 
-        void _handleOtherScroll(ScrollUpdateNotification notification)
-        {
-            print("_handleOtherScroll---------------------->$notification");
-            ScrollUpdateNotification scrollUpdateNotification = notification;
-            //_resetWhenAtEdge(scrollUpdateNotification.metrics);
-        }
+//        void _handleOtherScroll(ScrollUpdateNotification notification)
+//        {
+//            print("_handleOtherScroll---------------------->$notification");
+//            ScrollUpdateNotification scrollUpdateNotification = notification;
+//            //_resetWhenAtEdge(scrollUpdateNotification.metrics);
+//        }
 
         //print("notification---------------------->$notification");
         if (notification is UserScrollNotification)
@@ -212,6 +222,10 @@ class _AutoScrollPageViewState extends State<AutoScrollPageView>
         else if (notification is ScrollUpdateNotification)
         {
             //_handleOtherScroll(notification);
+        }
+        else if (notification is ScrollStartNotification)
+        {
+
         }
         else if (notification is ScrollEndNotification)
         {

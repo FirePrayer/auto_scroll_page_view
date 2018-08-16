@@ -13,12 +13,12 @@ class AutoScrollPageViewDemo extends StatelessWidget
         widgetList.add(new Center(child: new Container(color: Colors.orange, width: 300.0, height: 300.0, child: new Text("C"),),));
         //widgetList.add(new Center(child: new Container(color: Colors.orange, width: 300.0, height: 300.0, child: new Text("D"),),));
 
-        PageChanged pageChanged = (int index)
+        OnPageChanged pageChanged = (int index)
         {
             print("当前下标----------------------->$index");
         };
 
-        AutoScrollPageView autoScrollPageView = AutoScrollPageView(widgetList, pageChanged: pageChanged,);
+        AutoScrollPageView autoScrollPageView = AutoScrollPageView(widgetList, onPageChanged: pageChanged,);
         return new Center(child: autoScrollPageView);
     }
 }
